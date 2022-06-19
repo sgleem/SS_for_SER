@@ -1,6 +1,5 @@
 model/*
 log/*
 *.pyc
-myenv/*
 sg_utils_old/*
 train_old.py
