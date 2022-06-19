@@ -35,10 +35,10 @@ def main(args):
 
 
     # Initialize dataset
-    DataManager=sg_utils.DataManager(
-            config_path = args.conf_path, 
-            sample_num = args.sample_num
-        )
+    DataManager=sg_utils.DataManager(args.conf_path)
+        #     config_path = args.conf_path, 
+        #     sample_num = args.sample_num
+        # )
     lab_type = args.label_type
     if args.label_type == "dimensional":
         assert args.output_num == 3
@@ -78,8 +78,8 @@ def main(args):
     train_labs = DataManager.get_msp_labels(train_utts, lab_type=lab_type)
     train_wavs = sg_utils.WavExtractor(train_feat_path).extract()
 
-    dev_feat_path = DataManager.get_wav_path("msp-podcast", args.data_type, "Development")[:snum]
-    dev_utts = DataManager.get_utt_list("msp-podcast", "Development")[:snum]
+    dev_feat_path = DataManager.get_wav_path("msp-podcast", args.data_type, "dev")[:snum]
+    dev_utts = DataManager.get_utt_list("msp-podcast", "dev")[:snum]
     dev_labs = DataManager.get_msp_labels(dev_utts)
     dev_wavs = sg_utils.WavExtractor(dev_feat_path).extract()
     ###################################################################################################
@@ -256,6 +256,10 @@ if __name__ == "__main__":
         '--sample_num',
         default=None,
         type=int)
+    parser.add_argument(
+        '--conf_path',
+        default="conf.json",
+        type=str)
 
     # Data Arguments
     parser.add_argument(
@@ -263,7 +267,7 @@ if __name__ == "__main__":
         default="clean",
         type=str)
     parser.add_argument(
-        '--feature_type',
+        '--model_type',
         default="wav2vec",
         type=str)
     parser.add_argument(

@@ -9,7 +9,7 @@ from torch.cuda.amp import GradScaler, autocast
 sys.path.append("/media/kyunster/hdd/Project/SS_for_SER")
 import sg_utils
 
-class modelWrapper():
+class ModelWrapper():
     def __init__(self, args, **kwargs):
         self.args = args
 
@@ -19,7 +19,7 @@ class modelWrapper():
         self.hidden_dim = args.hidden_dim
         self.num_layers = args.num_layers
         self.output_num = args.output_num
-        self.lab_type = args.lab_type
+        self.lab_type = args.label_type
 
         self.lr = args.lr
 
@@ -45,10 +45,10 @@ class modelWrapper():
             self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-large")
 
         self.ser_model = ser.HLD(
-            input_dim = 1024 if is_large else 768, 
-            hidden_dim = self.hidden_dim, 
-            num_layers = self.num_layers, 
-            output_dim = self.output_num, 
+            1024 if is_large else 768, 
+            self.hidden_dim, 
+            self.num_layers, 
+            self.output_num, 
             p=0.5, 
             lab_type=self.lab_type)
 

@@ -20,7 +20,7 @@ from transformers import Wav2Vec2Processor, Wav2Vec2Model
 
 # Self-Written Modules
 sys.path.append("/media/kyunster/hdd/Project/SS_for_SER_comparison")
-import sg_utils_old
+import sg_utils
 
 import net
 
@@ -43,33 +43,33 @@ def main(args):
     lab_type = args.label_type
     if args.label_type == "dimensional":
         assert args.output_num == 3
-    # DataManager=sg_utils.DataManager("conf.json")
-    # test_wav_path = DataManager.get_wav_path("msp-podcast", args.data_type, "test", snr=args.snr)
+    DataManager=sg_utils.DataManager("conf.json")
+    test_wav_path = DataManager.get_wav_path("msp-podcast", args.data_type, "test", snr=args.snr)
+    test_utts = DataManager.get_utt_list("msp-podcast", "test")
+    test_labs = DataManager.get_msp_labels(test_utts, lab_type=lab_type)
+
+    # DataManager=sg_utils.DataManager("env/msp_improv.json")
+    # # DataManager=sg_utils.DataManager("env/msp-podcast/1.10.json")
     # test_utts = DataManager.get_utt_list("msp-podcast", "test")
     # test_labs = DataManager.get_msp_labels(test_utts, lab_type=lab_type)
 
-    DataManager=sg_utils_old.DataManager("env/msp_improv.json")
-    # DataManager=sg_utils.DataManager("env/msp-podcast/1.10.json")
-    test_utts = DataManager.get_utt_list("test")
-    test_labs = DataManager.get_msp_labels(test_utts) #, lab_type=lab_type)
-
-    test_wav_path = [DataManager.env_dict["audio_path"]+"/"+utt_id for utt_id in test_utts]
-    test_wavs = sg_utils_old.WavExtractor(test_wav_path).extract()
+    # test_wav_path = [DataManager.env_dict["audio_path"]+"/"+utt_id for utt_id in test_utts]
+    test_wavs = sg_utils.WavExtractor(test_wav_path).extract()
     ###################################################################################################
     with open(args.model_path+"/train_norm_stat.pkl", 'rb') as f:
         wav_mean, wav_std = pk.load(f)
-    test_set = sg_utils_old.WavSet(test_wavs, test_labs, test_utts, print_dur=True, lab_type=lab_type,
+    test_set = sg_utils.WavSet(test_wavs, test_labs, test_utts, print_dur=True, lab_type=lab_type,
         wav_mean = wav_mean, wav_std = wav_std)
 
 
-    lm = sg_utils_old.LogManager()
+    lm = sg_utils.LogManager()
     if args.label_type == "dimensional":
         lm.alloc_stat_type_list(["test_aro", "test_dom", "test_val"])
     elif args.label_type == "categorical":
         lm.alloc_stat_type_list(["test_loss", "test_acc"])
 
     batch_size=args.batch_size
-    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=sg_utils_old.collate_fn_padd, shuffle=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=sg_utils.collate_fn_padd, shuffle=True)
     
     # if args.train_type == "manually_finetuned":
     model_path = args.model_path
@@ -117,13 +117,13 @@ def main(args):
         total_y = torch.cat(total_y, 0)
     
     if args.label_type == "dimensional":
-        ccc = sg_utils_old.CCC_loss(total_pred, total_y)        
+        ccc = sg_utils.CCC_loss(total_pred, total_y)        
         lm.add_torch_stat("test_aro", ccc[0])
         lm.add_torch_stat("test_dom", ccc[1])
         lm.add_torch_stat("test_val", ccc[2])
     elif args.label_type == "categorical":
-        loss = sg_utils_old.CE_category(total_pred, total_y)
-        acc = sg_utils_old.calc_acc(total_pred, total_y)
+        loss = sg_utils.CE_category(total_pred, total_y)
+        acc = sg_utils.calc_acc(total_pred, total_y)
         lm.add_torch_stat("test_loss", loss)
         lm.add_torch_stat("test_acc", acc)
     lm.print_stat()
@@ -184,7 +184,15 @@ if __name__ == "__main__":
     
     # Model Arguments
     parser.add_argument(
+        '--conf_path',
+        default="conf.json",
+        type=str)
+    parser.add_argument(
         '--model_type',
+        default="wav2vec",
+        type=str)
+    parser.add_argument(
+        '--train_type',
         default="manually_finetuned",
         type=str)
     parser.add_argument(
