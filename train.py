@@ -19,28 +19,45 @@ import torch.optim as optim
 from transformers import Wav2Vec2Processor, Wav2Vec2Model, WavLMModel
 
 # Self-Written Modules
-sys.path.append("/media/kyunster/hdd/Project/SS_for_SER_comparison")
-import sg_utils_old
-
-from net import ser, chunk
-
+sys.path.append("/media/kyunster/hdd/Project/SS_for_SER")
+import sg_utils
+import net
+# from net import ser, chunk
 
 
 def main(args):
-    seed = args.seed
-    os.environ["CUBLAS_WORKSPACE_CONFIG"]=":4096:8"
-    torch.set_deterministic(True)
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    # Set hyperparameter
+    sg_utils.set_deterministic(args.seed)
+    sg_utils.print_config_description(args.conf_path)
+
+    # Make model directory
     model_path = args.model_path
     os.makedirs(model_path+"/param", exist_ok=True)
 
-    DataManager=sg_utils_old.DataManager("conf.json")
-    
+
+    # Initialize dataset
+    DataManager=sg_utils.DataManager(
+            config_path = args.conf_path, 
+            sample_num = args.sample_num
+        )
     lab_type = args.label_type
     if args.label_type == "dimensional":
         assert args.output_num == 3
+    # total_utt_dict={"train": None, "dev": None}
+    # total_dataset={"train": None, "dev": None}
+    # total_dataloader={"train": None, "dev": None}
+    # for dtype in ["train", "dev"]:
+    #     total_utt_dict[dtype] = sg_utils.UtteranceList(
+    #         DataManager.get_utts(split_type=dtype),
+    #         DataManager.get_wav_paths(split_type=dtype),
+    #         label = DataManager.get_labels(split_type=dtype, label_type=args.label_type),
+    #         label_type = args.label_type,
+    #     )
+    #     # total_dataset[dtype] = total_utt_dict[dtype].generate_torch_dataset()
+    #     total_dataloader[dtype] = total_utt_dict[dtype].generate_torch_dataloader(
+    #         normalizer = sg_utils.MSP_Podcast_Normalizer(method="minmax")
+    #         batch_size=args.batch_size,
+    #         shuffle=True if dtype == "train" else False
+    #     )
     ###################################################################################################
     """
     lab_type: "categorical" or "dimensional"
@@ -59,43 +76,36 @@ def main(args):
     train_feat_path = DataManager.get_wav_path("msp-podcast", args.data_type, "train")[:snum]
     train_utts = DataManager.get_utt_list("msp-podcast", "train")[:snum]
     train_labs = DataManager.get_msp_labels(train_utts, lab_type=lab_type)
-    train_wavs = sg_utils_old.WavExtractor(train_feat_path).extract()
+    train_wavs = sg_utils.WavExtractor(train_feat_path).extract()
 
     dev_feat_path = DataManager.get_wav_path("msp-podcast", args.data_type, "Development")[:snum]
     dev_utts = DataManager.get_utt_list("msp-podcast", "Development")[:snum]
     dev_labs = DataManager.get_msp_labels(dev_utts)
-    dev_wavs = sg_utils_old.WavExtractor(dev_feat_path).extract()
+    dev_wavs = sg_utils.WavExtractor(dev_feat_path).extract()
     ###################################################################################################
 
-    train_set = sg_utils_old.WavSet(train_wavs, train_labs, train_utts, print_dur=True, lab_type=lab_type)
-    dev_set = sg_utils_old.WavSet(dev_wavs, dev_labs, dev_utts, print_dur=True, lab_type=lab_type)
-
-    wav2vec_lr = args.lr
-    ser_lr=args.lr
-
-    drop_p = 0.5
-
-    # wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-robust").to(args.device)
-    # del wav2vec_model.encoder.layers[12:]
-    # wav2vec_model.freeze_feature_encoder()
-    wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-base-plus").to(args.device)
-    wav2vec_model.freeze_feature_encoder()
-    wav2vec_opt = optim.Adam(wav2vec_model.parameters(), lr=wav2vec_lr)
+    train_set = sg_utils.WavSet(train_wavs, train_labs, train_utts, print_dur=True, lab_type=lab_type)
+    dev_set = sg_utils.WavSet(dev_wavs, dev_labs, dev_utts, print_dur=True, lab_type=lab_type,
+        wav_mean = train_set.wav_mean, wav_std = train_set.wav_std)
+    train_set.save_norm_stat(model_path+"/train_norm_stat.pkl")
     
-    # ser_model = ser.HLD(1024, args.hidden_dim, args.num_layers, args.output_num, p=drop_p, lab_type=lab_type).to(args.device)
-    ser_model = ser.HLD(768, args.hidden_dim, args.num_layers, args.output_num, p=drop_p, lab_type=lab_type).to(args.device)
-    ser_opt = optim.Adam(ser_model.parameters(), lr=ser_lr)
+    total_dataloader={
+        "train": DataLoader(train_set, batch_size=args.batch_size, collate_fn=sg_utils.collate_fn_padd, shuffle=True),
+        "dev": DataLoader(dev_set, batch_size=args.batch_size, collate_fn=sg_utils.collate_fn_padd, shuffle=False)
+    }
 
-    lm = sg_utils_old.LogManager()
+    # Initialize model
+    modelWrapper = net.ModelWrapper(args) # Change this to use custom model
+    modelWrapper.init_model()
+    modelWrapper.init_optimizer()
+
+    # Initialize loss function
+    lm = sg_utils.LogManager()
     if args.label_type == "dimensional":
         lm.alloc_stat_type_list(["train_aro", "train_dom", "train_val",
             "dev_aro", "dev_dom", "dev_val"])
     elif args.label_type == "categorical":
         lm.alloc_stat_type_list(["train_loss", "train_acc", "dev_loss", "dev_acc"])
-
-    batch_size=args.batch_size
-    train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=sg_utils_old.collate_fn_padd, shuffle=True)
-    dev_loader = DataLoader(dev_set, batch_size=batch_size, collate_fn=sg_utils_old.collate_fn_padd, shuffle=False)
 
     epochs=args.epochs
     scaler = GradScaler()
@@ -104,9 +114,8 @@ def main(args):
     for epoch in range(epochs):
         print("Epoch:",epoch)
         lm.init_stat()
-        wav2vec_model.train()
-        ser_model.train()
-        for xy_pair in tqdm(train_loader):
+        modelWrapper.set_train()
+        for xy_pair in tqdm(total_dataloader["train"]):
             x = xy_pair[0]
             y = xy_pair[1]
             mask = xy_pair[2]
@@ -115,29 +124,34 @@ def main(args):
             y=y.cuda(non_blocking=True).float()
             mask=mask.cuda(non_blocking=True).float()
 
-            # Feed-forward
+            
             with autocast():
-                w2v = wav2vec_model(x, attention_mask=mask).last_hidden_state
-                h = sg_utils_old.AverageAll(w2v)
-                pred = ser_model(h)
+                ## Feed-forward
+                # w2v = wav2vec_model(x, attention_mask=mask).last_hidden_state
+                # h = sg_utils_old.AverageAll(w2v)
+                # pred = ser_model(h)
+                pred = modelWrapper.feed_forward(x, attention_mask=mask)
+                
+                ## Calculate loss
                 total_loss = 0.0
-
                 if args.label_type == "dimensional":
-                    ccc = sg_utils_old.CCC_loss(pred, y)
+                    ccc = sg_utils.CCC_loss(pred, y)
                     loss = 1.0-ccc
                     total_loss += loss[0] + loss[1] + loss[2]
                 elif args.label_type == "categorical":
-                    loss = sg_utils_old.CE_category(pred, y)
+                    loss = sg_utils.CE_category(pred, y)
                     total_loss += loss
-                    acc = sg_utils_old.calc_acc(pred, y)
+                    acc = sg_utils.calc_acc(pred, y)
+                    
 
-            # Backpropagation
-            wav2vec_opt.zero_grad(set_to_none=True)
-            ser_opt.zero_grad(set_to_none=True)
-            scaler.scale(total_loss).backward()
-            scaler.step(wav2vec_opt)
-            scaler.step(ser_opt)
-            scaler.update()
+            ## Backpropagation
+            modelWrapper.backprop(total_loss)
+            # wav2vec_opt.zero_grad(set_to_none=True)
+            # ser_opt.zero_grad(set_to_none=True)
+            # scaler.scale(total_loss).backward()
+            # scaler.step(wav2vec_opt)
+            # scaler.step(ser_opt)
+            # scaler.update()
 
             # Logging
             if args.label_type == "dimensional":
@@ -148,13 +162,14 @@ def main(args):
                 lm.add_torch_stat("train_loss", loss)
                 lm.add_torch_stat("train_acc", acc)
 
-        wav2vec_model.eval()
-        ser_model.eval()
+        # wav2vec_model.eval()
+        # ser_model.eval()
+        modelWrapper.set_eval()
 
         with torch.no_grad():
             total_pred = [] 
             total_y = []
-            for xy_pair in tqdm(dev_loader):
+            for xy_pair in tqdm(total_dataloader["dev"]):
                 x = xy_pair[0]
                 y = xy_pair[1]
                 mask = xy_pair[2]
@@ -163,9 +178,10 @@ def main(args):
                 y=y.cuda(non_blocking=True).float()
                 mask=mask.cuda(non_blocking=True).float()
 
-                w2v = wav2vec_model(x, attention_mask=mask).last_hidden_state
-                h = sg_utils_old.AverageAll(w2v)
-                pred = ser_model(h)
+                # w2v = wav2vec_model(x, attention_mask=mask).last_hidden_state
+                # h = sg_utils_old.AverageAll(w2v)
+                # pred = ser_model(h)
+                pred = modelWrapper.feed_forward(x, attention_mask=mask, eval=True)
                 total_pred.append(pred)
                 total_y.append(y)
 
@@ -173,13 +189,13 @@ def main(args):
             total_y = torch.cat(total_y, 0)
         
         if args.label_type == "dimensional":
-            ccc = sg_utils_old.CCC_loss(total_pred, total_y)            
+            ccc = sg_utils.CCC_loss(total_pred, total_y)            
             lm.add_torch_stat("dev_aro", ccc[0])
             lm.add_torch_stat("dev_dom", ccc[1])
             lm.add_torch_stat("dev_val", ccc[2])
         elif args.label_type == "categorical":
-            loss = sg_utils_old.CE_category(total_pred, total_y)
-            acc = sg_utils_old.calc_acc(total_pred, total_y)
+            loss = sg_utils.CE_category(total_pred, total_y)
+            acc = sg_utils.calc_acc(total_pred, total_y)
             lm.add_torch_stat("dev_loss", loss)
             lm.add_torch_stat("dev_acc", acc)
 
@@ -193,9 +209,9 @@ def main(args):
             min_epoch = epoch
             min_loss = dev_loss
 
-
-        torch.save(wav2vec_model.state_dict(), os.path.join(model_path, "param", str(epoch)+"_wav2vec.pt"))
-        torch.save(ser_model.state_dict(), os.path.join(model_path, "param", str(epoch)+"_head.pt"))
+        modelWrapper.save_model(epoch)
+        # torch.save(wav2vec_model.state_dict(), os.path.join(model_path, "param", str(epoch)+"_wav2vec.pt"))
+        # torch.save(ser_model.state_dict(), os.path.join(model_path, "param", str(epoch)+"_head.pt"))
         
     print("Save",end=" ")
     print(min_epoch, end=" ")
@@ -204,12 +220,13 @@ def main(args):
     print("Loss",end=" ")
     print(3.0-min_loss, end=" ")
     print("")
-    os.system("cp "+os.path.join(model_path, "param", str(min_epoch)+"_head.pt") + \
-        " "+os.path.join(model_path, "final_head.pt"))
-    os.system("cp "+os.path.join(model_path, "param", str(min_epoch)+"_wav2vec.pt") + \
-        " "+os.path.join(model_path, "final_wav2vec.pt"))
+    modelWrapper.save_final_model(min_epoch, remove_param=True)
+    # os.system("cp "+os.path.join(model_path, "param", str(min_epoch)+"_head.pt") + \
+    #     " "+os.path.join(model_path, "final_head.pt"))
+    # os.system("cp "+os.path.join(model_path, "param", str(min_epoch)+"_wav2vec.pt") + \
+    #     " "+os.path.join(model_path, "final_wav2vec.pt"))
 
-    os.system("rm -rf "+os.path.join(model_path, "param"))
+    # os.system("rm -rf "+os.path.join(model_path, "param"))
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -234,6 +251,10 @@ if __name__ == "__main__":
     parser.add_argument(
         '--seed',
         default=0,
+        type=int)
+    parser.add_argument(
+        '--sample_num',
+        default=None,
         type=int)
 
     # Data Arguments
