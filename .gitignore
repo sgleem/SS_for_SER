@@ -2,3 +2,4 @@ model/*
 log/*
 *.pyc
 myenv/*
+sg_utils_old/*

@@ -10,7 +10,8 @@
         - <utterance-id> <categorical-emotion-1> <categorical-emotion-2> ... <EmoAct> <EmoVal> <EmoDom> <Split_Set>
 - If corpus does not follow the above format, additional script is needed to match this format
 - Such scripts need to be placed in the "preprocess/corpus" directory
-
+- If categorical emotion label is not provided, write 0 for all the categorical emotions
+- If dimensional emotion label is not provided, write 0 for all the dimensional emotions
 
 ## Preprocessing
 - All data must be processed as "Utterance" class objects

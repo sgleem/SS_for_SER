@@ -4,7 +4,8 @@
 python -u train.py \
 --device            cuda \
 --data_type         clean \
---feature_type      wavlm \
+--model_type        hubert \
+--conf_path         conf.json \
 --seed              0 \
 --batch_size        16 \
 --hidden_dim        1024 \
@@ -12,7 +13,7 @@ python -u train.py \
 --epochs            10 \
 --lr                1e-4 \
 --noise_dur         30m \
---model_path        model/wavlm/1_10/clean_0
+--model_path        model/hubert/1_10/clean_0
 
 # python -u test.py \
 # --device            cuda \
