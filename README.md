@@ -7,7 +7,10 @@
 - cudnn 8.0.5
 
 ## Quick start
-- conda create --name myenv --file myenv.txt
-- source activate myenv
+```bash
+$ conda create --name myenv --file myenv.txt
+$ source activate myenv
+$ bash run.sh
+```
 ## Export
 - conda list --explicit > myenv.txt
