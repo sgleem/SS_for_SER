@@ -7,7 +7,8 @@ from multiprocessing import Pool
 from tqdm import tqdm
 from .normalizer import get_norm_stat_for_melspec
 import librosa
-
+from . import normalizer
+import pickle as pk
 class MelSetForGAN(torch_utils.data.Dataset):
     def __cut_segment__(self, cur_spec, max_dur, step_size):
         """
@@ -50,17 +51,26 @@ class WavSet(torch_utils.data.Dataset):
         self.print_dur = kwargs.get("print_dur", False)
         self.lab_type = kwargs.get("lab_type", False)
 
+        self.wav_mean = kwargs.get("wav_mean", None)
+        self.wav_std = kwargs.get("wav_std", None)
+
         # check max duration
         self.max_dur = np.min([np.max([len(cur_wav) for cur_wav in self.wav_list]), 12*16000])
+        if self.wav_mean is None or self.wav_std is None:
+            self.wav_mean, self.wav_std = normalizer.get_norm_stat_for_wav(self.wav_list)
 
+    def save_norm_stat(self, norm_stat_file):
+        with open(norm_stat_file, 'wb') as f:
+            pk.dump((self.wav_mean, self.wav_std), f)
+            
     def __len__(self):
         return len(self.wav_list)
 
     def __getitem__(self, idx):
         cur_wav = self.wav_list[idx][:self.max_dur]
         cur_dur = len(cur_wav)
-        cur_wav = (cur_wav - np.mean(cur_wav)) / (np.std(cur_wav) + 1e-8)
-
+        cur_wav = (cur_wav - self.wav_mean) / (self.wav_std+0.000001)
+        
         if self.lab_type == "dimensional":
             cur_lab = self.lab_list[idx]
             ## MSP-Podcast

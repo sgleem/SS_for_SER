@@ -22,8 +22,7 @@ from transformers import Wav2Vec2Processor, Wav2Vec2Model
 sys.path.append("/media/kyunster/hdd/Project/SS_for_SER_comparison")
 import sg_utils_old
 
-from net import ser, chunk, wav2vec2
-
+import net
 
 def main(args):
     seed = args.seed
@@ -57,8 +56,10 @@ def main(args):
     test_wav_path = [DataManager.env_dict["audio_path"]+"/"+utt_id for utt_id in test_utts]
     test_wavs = sg_utils_old.WavExtractor(test_wav_path).extract()
     ###################################################################################################
-
-    test_set = sg_utils_old.WavSet(test_wavs, test_labs, test_utts, print_dur=True, lab_type=lab_type)
+    with open(args.model_path+"/train_norm_stat.pkl", 'rb') as f:
+        wav_mean, wav_std = pk.load(f)
+    test_set = sg_utils_old.WavSet(test_wavs, test_labs, test_utts, print_dur=True, lab_type=lab_type,
+        wav_mean = wav_mean, wav_std = wav_std)
 
 
     lm = sg_utils_old.LogManager()
@@ -70,29 +71,24 @@ def main(args):
     batch_size=args.batch_size
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=sg_utils_old.collate_fn_padd, shuffle=True)
     
-    if args.model_type == "manually_finetuned":
-        model_path = args.model_path
+    # if args.train_type == "manually_finetuned":
+    model_path = args.model_path
 
-        wav2vec_model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-robust").to(args.device)
-        del wav2vec_model.encoder.layers[12:]
-        wav2vec_model.load_state_dict(torch.load(model_path+"/final_wav2vec.pt"))
-        
-        ser_model = ser.HLD(1024, args.hidden_dim, args.num_layers, args.output_num, lab_type=lab_type).to(args.device)
-        ser_model.load_state_dict(torch.load(model_path+"/final_head.pt"))
-        
-        wav2vec_model.eval()
-        ser_model.eval()
+    modelWrapper = net.ModelWrapper(args) # Change this to use custom model
+    modelWrapper.init_model()
+    modelWrapper.load_model(model_path)
+    modelWrapper.set_eval()
 
-    elif args.model_type == "msp17_finetuned":
-        model_name = 'audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim'
-        processor = Wav2Vec2Processor.from_pretrained(model_name)
-        model = wav2vec2.EmotionModel.from_pretrained(model_name)
-        if args.model_path != None:
-            model.load_state_dict(torch.load(args.model_path+"/final.pt"))
-        model.to(args.device)
-        model.eval()      
-    else:
-        raise Exception("Invalid model type")  
+    # elif args.train_type == "msp17_finetuned":
+    #     model_name = 'audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim'
+    #     processor = Wav2Vec2Processor.from_pretrained(model_name)
+    #     model = wav2vec2.EmotionModel.from_pretrained(model_name)
+    #     if args.model_path != None:
+    #         model.load_state_dict(torch.load(args.model_path+"/final.pt"))
+    #     model.to(args.device)
+    #     model.eval()      
+    # else:
+    #     raise Exception("Invalid model type")  
 
     with torch.no_grad():
         total_pred = [] 
@@ -106,17 +102,15 @@ def main(args):
             y=y.cuda(non_blocking=True).float()
             mask=mask.cuda(non_blocking=True).float()
             
-            if args.model_type == "manually_finetuned":
-                w2v = wav2vec_model(x, attention_mask=mask).last_hidden_state
-                h = sg_utils_old.AverageAll(w2v)
-                pred = ser_model(h)
-                total_pred.append(pred)
-                total_y.append(y)
+            # if args.train_type == "manually_finetuned":
+            pred = modelWrapper.feed_forward(x, attention_mask=mask, eval=True)
+            total_pred.append(pred)
+            total_y.append(y)
 
-            if args.model_type == "msp17_finetuned":
-                pred = model(x)[1]
-                total_pred.append(pred)
-                total_y.append(y)
+            # if args.train_type == "msp17_finetuned":
+            #     pred = model(x)[1]
+            #     total_pred.append(pred)
+            #     total_y.append(y)
 
             
         total_pred = torch.cat(total_pred, 0)

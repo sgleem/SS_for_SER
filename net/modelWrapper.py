@@ -118,3 +118,19 @@ class modelWrapper():
         if remove_param:
             os.system("rm -rf "+os.path.join(self.model_path, "param"))
 
+    def set_eval(self):
+        """
+        Set the model to eval mode
+        """
+        self.wav2vec_model.eval()
+        self.ser_model.eval()
+    def set_train(self):
+        """
+        Set the model to train mode
+        """
+        self.wav2vec_model.train()
+        self.ser_model.train()
+
+    def load_model(self, model_path):
+        self.wav2vec_model.load_state_dict(torch.load(model_path+"/final_wav2vec.pt"))
+        self.ser_model.load_state_dict(torch.load(model_path+"/final_head.pt"))
