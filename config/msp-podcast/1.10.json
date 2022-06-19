@@ -1,0 +1,10 @@
+{
+    "audio_path": "/media/kyunster/hdd/corpus/MSP_Podcast_1.10/Audios/Audio",
+    "label_path": "/media/kyunster/hdd/corpus/MSP_Podcast_1.10/Labels/labels_concensus.csv",
+    "data_split_type":{
+        "Train": "Train", "train": "Train",
+        "Validation": "Development", "dev": "Development", "Development": "Development",
+        "Test1": "Test1", "Test": "Test1", "test": "Test1",
+        "Test2": "Test2"
+    }
+}

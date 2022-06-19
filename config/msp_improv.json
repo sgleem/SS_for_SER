@@ -1,0 +1,10 @@
+{
+    "audio_path": "/media/kyunster/hdd/corpus/MSP-IMPROV/MSP-IMPROV_auds_mono/AUDs_mono",
+    "label_path": "/media/kyunster/hdd/corpus/MSP-IMPROV/MSP-IMPROV_auds_mono/Labels/labels_concensus_1.csv",
+    "data_split_type":{
+        "Train": "Train", "train": "Train",
+        "Validation": "Development", "dev": "Development", "Development": "Development",
+        "Test1": "Test", "Test": "Test", "test": "Test",
+        "Test2": "Test2"
+    }
+}

@@ -9,7 +9,5 @@
 ## Quick start
 - conda create --name myenv --file myenv.txt
 - source activate myenv
-
-
 ## Export
 - conda list --explicit > myenv.txt
