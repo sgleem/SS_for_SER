@@ -21,7 +21,6 @@ from transformers import Wav2Vec2Processor, Wav2Vec2Model
 # Self-Written Modules
 sys.path.append("/media/kyunster/hdd/Project/SS_for_SER_comparison")
 import sg_utils
-
 import net
 
 def main(args):
@@ -46,6 +45,8 @@ def main(args):
     DataManager=sg_utils.DataManager("conf.json")
     test_wav_path = DataManager.get_wav_path("msp-podcast", args.data_type, "test", snr=args.snr)
     test_utts = DataManager.get_utt_list("msp-podcast", "test")
+    test_wav_path.sort()
+    test_utts.sort()
     test_labs = DataManager.get_msp_labels(test_utts, lab_type=lab_type)
 
     # DataManager=sg_utils.DataManager("env/msp_improv.json")
@@ -69,7 +70,7 @@ def main(args):
         lm.alloc_stat_type_list(["test_loss", "test_acc"])
 
     batch_size=args.batch_size
-    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=sg_utils.collate_fn_padd, shuffle=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=sg_utils.collate_fn_padd, shuffle=False)
     
     # if args.train_type == "manually_finetuned":
     model_path = args.model_path
@@ -78,17 +79,7 @@ def main(args):
     modelWrapper.init_model()
     modelWrapper.load_model(model_path)
     modelWrapper.set_eval()
-
-    # elif args.train_type == "msp17_finetuned":
-    #     model_name = 'audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim'
-    #     processor = Wav2Vec2Processor.from_pretrained(model_name)
-    #     model = wav2vec2.EmotionModel.from_pretrained(model_name)
-    #     if args.model_path != None:
-    #         model.load_state_dict(torch.load(args.model_path+"/final.pt"))
-    #     model.to(args.device)
-    #     model.eval()      
-    # else:
-    #     raise Exception("Invalid model type")  
+ 
 
     with torch.no_grad():
         total_pred = [] 

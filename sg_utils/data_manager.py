@@ -190,12 +190,17 @@ class DataManager:
         label_path = self.env_dict["MSP-Podcast"]["label"]
         # label_path = self.env_dict["label_path"]
         self.msp_label_dict=dict()
+        
         with open(label_path, 'r') as f:
-            f.readline()
+            header = f.readline().split(",")
+            aro_idx = header.index("EmoAct")
+            dom_idx = header.index("EmoDom")
+            val_idx = header.index("EmoVal")
+
             csv_reader = csv.reader(f)
             for row in csv_reader:
                 self.msp_label_dict[row[0]]=dict()
-                self.msp_label_dict[row[0]]=[float(row[2]), float(row[4]), float(row[3])]
+                self.msp_label_dict[row[0]]=[float(row[aro_idx]), float(row[dom_idx]), float(row[val_idx])]
 
     def get_msp_labels(self, utt_list, lab_type=None):
         if self.msp_label_dict == None:

@@ -3,3 +3,4 @@ log/*
 *.pyc
 sg_utils_old/*
 train_old.py
+retrain.py
