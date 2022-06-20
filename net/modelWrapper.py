@@ -33,16 +33,20 @@ class ModelWrapper():
         """
         assert self.model_type in ["wav2vec2", "hubert", "wavlm"], \
             print("Wrong model type")
-        is_large = True # If base model, set it to False
+        # If base model, set it to False
         if self.model_type == "wav2vec2":
             self.wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-robust")
             del self.wav2vec_model.encoder.layers[12:]
+            is_large = True 
 
         elif self.model_type == "hubert":
             self.wav2vec_model= HubertModel.from_pretrained("facebook/hubert-large-ll60k")
+            is_large = True 
 
         elif self.model_type == "wavlm":
-            self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-large")
+            # self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-large")
+            self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-base-plus")
+            is_large = False
 
         self.ser_model = ser.HLD(
             1024 if is_large else 768, 

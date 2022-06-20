@@ -45,10 +45,10 @@
         "HLD": "/media/kyunster/backup/DCASE/IS13/hld"
     },
     "MSP-Podcast":{
-        "Partition": "/home/lucas/Desktop/MSP-HACKATHON/MSP_PODCAST_1.7/Partitions.txt",
-        "label": "/home/lucas/Desktop/MSP-HACKATHON/MSP_PODCAST_1.7/Labels/labels_concensus.csv",
+        "Partition": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/Partitions.txt",
+        "label": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/Labels/labels_concensus.csv",
         "wav":{
-            "clean": "/home/lucas/Desktop/MSP-HACKATHON/MSP_PODCAST_1.7/Audios",
+            "clean": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/16khz",
             "noisy/10db": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/corrupted/10db/msp_podcast_v1.8",
             "noisy/5db": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/corrupted/5db/msp_podcast_v1.8",
             "noisy/0db": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/corrupted/0db/msp_podcast_v1.8",
