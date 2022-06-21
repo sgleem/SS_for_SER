@@ -85,9 +85,9 @@ def main(args):
     ###################################################################################################
 
     train_set = sg_utils.WavSet(train_wavs, train_labs, train_utts, print_dur=True, lab_type=lab_type)
-    dev_set = sg_utils.WavSet(dev_wavs, dev_labs, dev_utts, print_dur=True, lab_type=lab_type,
-        wav_mean = train_set.wav_mean, wav_std = train_set.wav_std)
-    train_set.save_norm_stat(model_path+"/train_norm_stat.pkl")
+    dev_set = sg_utils.WavSet(dev_wavs, dev_labs, dev_utts, print_dur=True, lab_type=lab_type)#,
+    #     wav_mean = train_set.wav_mean, wav_std = train_set.wav_std)
+    # train_set.save_norm_stat(model_path+"/train_norm_stat.pkl")
     
     total_dataloader={
         "train": DataLoader(train_set, batch_size=args.batch_size, collate_fn=sg_utils.collate_fn_padd, shuffle=True),

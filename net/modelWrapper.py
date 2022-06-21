@@ -6,6 +6,7 @@ from transformers import Wav2Vec2Model, WavLMModel, HubertModel
 import torch
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
+import fairseq
 sys.path.append("/media/kyunster/hdd/Project/SS_for_SER")
 import sg_utils
 
@@ -31,25 +32,42 @@ class ModelWrapper():
         """
         Define model and load pretrained weights
         """
-        assert self.model_type in ["wav2vec2", "hubert", "wavlm"], \
+        assert self.model_type in ["wav2vec1", "wav2vec2", "hubert", "wavlm"], \
             print("Wrong model type")
         # If base model, set it to False
         if self.model_type == "wav2vec2":
+            print("Loading wav2vec2-large-robust model")
             self.wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-robust")
             del self.wav2vec_model.encoder.layers[12:]
+            is_large = True
+
+        elif self.model_type == "wav2vec1":
+            print("Loading wav2vec1.0-large model")
+            os.makedirs("pretrained", exist_ok=True)
+            os.system("wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_large.pt -O pretrained/wav2vec-large.pt")
+            model, _, _= fairseq.checkpoint_utils.load_model_ensemble_and_task(["pretrained/wav2vec-large.pt"])
+            self.wav2vec_model = model[0]
+            # del self.wav2vec_model.encoder.layers[12:]
             is_large = True 
 
         elif self.model_type == "hubert":
+            print("Loading HuBert-large model")
             self.wav2vec_model= HubertModel.from_pretrained("facebook/hubert-large-ll60k")
             is_large = True 
 
         elif self.model_type == "wavlm":
-            # self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-large")
-            self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-base-plus")
-            is_large = False
-
+            print("Loading WavLM-large model")
+            self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-large")
+            # self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-base-plus")
+            is_large = True
+        if self.model_type == "wav2vec1":
+            idim = 512
+        elif is_large:
+            idim = 1024
+        else:
+            idim = 768
         self.ser_model = ser.HLD(
-            1024 if is_large else 768, 
+            idim,
             self.hidden_dim, 
             self.num_layers, 
             self.output_num, 
@@ -77,7 +95,11 @@ class ModelWrapper():
         """
         def __inference__(self, x, **kwargs):
             mask = kwargs.get("attention_mask", None)
-            w2v = self.wav2vec_model(x, attention_mask=mask).last_hidden_state
+            if self.model_type == "wav2vec1":
+                z = self.wav2vec_model.feature_extractor(x)
+                w2v = self.wav2vec_model.feature_aggregator(z)
+            else:
+                w2v = self.wav2vec_model(x, attention_mask=mask).last_hidden_state
             h = sg_utils.AverageAll(w2v)
             pred = self.ser_model(h)
             return pred

@@ -1,19 +1,18 @@
 #!/bin/bash
 
 ## Training
-# python -u train.py \
-# --device            cuda \
-# --data_type         clean \
-# --model_type        wav2vec2 \
-# --conf_path         conf.json \
-# --seed              0 \
-# --batch_size        16 \
-# --hidden_dim        1024 \
-# --num_layers        2 \
-# --epochs            10 \
-# --lr                1e-4 \
-# --noise_dur         30m \
-# --model_path        model/wav2vec2/1_8/clean_0
+python -u train.py \
+--device            cuda \
+--data_type         clean \
+--model_type        wav2vec2 \
+--conf_path         conf.json \
+--seed              0 \
+--batch_size        16 \
+--hidden_dim        1024 \
+--num_layers        2 \
+--epochs            10 \
+--lr                1e-4 \
+--model_path        model/wav2vec2_prev
 
 # ## Evaluation
 python -u test.py \
@@ -26,7 +25,7 @@ python -u test.py \
 --batch_size        1 \
 --hidden_dim        1024 \
 --num_layers        2 \
---model_path        model/wav2vec2/1_8/clean_0
+--model_path        model/wav2vec2_prev
 
 python -u test.py \
 --device            cuda \
@@ -39,7 +38,7 @@ python -u test.py \
 --batch_size        1 \
 --hidden_dim        1024 \
 --num_layers        2 \
---model_path        model/wav2vec2/1_8/clean_0
+--model_path        model/wav2vec2_prev
 
 # python -u retrain.py \
 # --device            cuda \

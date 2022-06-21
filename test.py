@@ -57,10 +57,10 @@ def main(args):
     # test_wav_path = [DataManager.env_dict["audio_path"]+"/"+utt_id for utt_id in test_utts]
     test_wavs = sg_utils.WavExtractor(test_wav_path).extract()
     ###################################################################################################
-    with open(args.model_path+"/train_norm_stat.pkl", 'rb') as f:
-        wav_mean, wav_std = pk.load(f)
-    test_set = sg_utils.WavSet(test_wavs, test_labs, test_utts, print_dur=True, lab_type=lab_type,
-        wav_mean = wav_mean, wav_std = wav_std)
+    # with open(args.model_path+"/train_norm_stat.pkl", 'rb') as f:
+    #     wav_mean, wav_std = pk.load(f)
+    test_set = sg_utils.WavSet(test_wavs, test_labs, test_utts, print_dur=True, lab_type=lab_type) #,
+        # wav_mean = wav_mean, wav_std = wav_std)
 
 
     lm = sg_utils.LogManager()

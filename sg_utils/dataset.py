@@ -69,7 +69,8 @@ class WavSet(torch_utils.data.Dataset):
     def __getitem__(self, idx):
         cur_wav = self.wav_list[idx][:self.max_dur]
         cur_dur = len(cur_wav)
-        cur_wav = (cur_wav - self.wav_mean) / (self.wav_std+0.000001)
+        # cur_wav = (cur_wav - self.wav_mean) / (self.wav_std+0.000001)
+        cur_wav = (cur_wav - np.mean(cur_wav)) / (np.std(cur_wav)+0.000001)
         
         if self.lab_type == "dimensional":
             cur_lab = self.lab_list[idx]

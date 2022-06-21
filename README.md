@@ -10,6 +10,8 @@
 ```bash
 $ conda create --name myenv --file myenv.txt
 $ source activate myenv
+$ pip install transformers
+$ pip install fairseq
 $ bash run.sh
 ```
 ## Export
