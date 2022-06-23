@@ -2,11 +2,11 @@ import os
 import sys
 from . import wav2vec2
 from . import ser
-from transformers import Wav2Vec2Model, WavLMModel, HubertModel
+from transformers import Wav2Vec2Model, WavLMModel, HubertModel, Data2VecAudioModel
 import torch
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
-import fairseq
+# import fairseq
 sys.path.append("/media/kyunster/hdd/Project/SS_for_SER")
 import sg_utils
 
@@ -32,33 +32,42 @@ class ModelWrapper():
         """
         Define model and load pretrained weights
         """
-        assert self.model_type in ["wav2vec1", "wav2vec2", "hubert", "wavlm"], \
+        assert self.model_type in ["data2vec", "wav2vec2", "hubert", "wavlm"], \
             print("Wrong model type")
         # If base model, set it to False
         if self.model_type == "wav2vec2":
             print("Loading wav2vec2-large-robust model")
             self.wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-robust")
             del self.wav2vec_model.encoder.layers[12:]
+            self.wav2vec_model.freeze_feature_encoder()
+            is_large = True
+        
+        elif self.model_type == "data2vec":
+            print("Loading data2vec-audio-base-960h model")
+            self.wav2vec_model= Data2VecAudioModel.from_pretrained("facebook/data2vec-audio-base-960h")
+            # del self.wav2vec_model.encoder.layers[12:]
+            self.wav2vec_model.freeze_feature_encoder()
             is_large = True
 
-        elif self.model_type == "wav2vec1":
-            print("Loading wav2vec1.0-large model")
-            os.makedirs("pretrained", exist_ok=True)
-            os.system("wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_large.pt -O pretrained/wav2vec-large.pt")
-            model, _, _= fairseq.checkpoint_utils.load_model_ensemble_and_task(["pretrained/wav2vec-large.pt"])
-            self.wav2vec_model = model[0]
-            # del self.wav2vec_model.encoder.layers[12:]
-            is_large = True 
+        # elif self.model_type == "wav2vec1":
+        #     print("Loading wav2vec1.0-large model")
+        #     os.makedirs("pretrained", exist_ok=True)
+        #     os.system("wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_large.pt -O pretrained/wav2vec-large.pt")
+        #     model, _, _= fairseq.checkpoint_utils.load_model_ensemble_and_task(["pretrained/wav2vec-large.pt"])
+        #     self.wav2vec_model = model[0]
+        #     # del self.wav2vec_model.encoder.layers[12:]
+        #     is_large = True 
 
         elif self.model_type == "hubert":
             print("Loading HuBert-large model")
             self.wav2vec_model= HubertModel.from_pretrained("facebook/hubert-large-ll60k")
+            self.wav2vec_model.feature_extractor._freeze_parameters()
             is_large = True 
 
         elif self.model_type == "wavlm":
             print("Loading WavLM-large model")
             self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-large")
-            # self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-base-plus")
+            self.wav2vec_model.freeze_feature_encoder()
             is_large = True
         if self.model_type == "wav2vec1":
             idim = 512
@@ -75,7 +84,7 @@ class ModelWrapper():
             lab_type=self.lab_type)
 
         self.wav2vec_model.to(self.device)
-        self.wav2vec_model.freeze_feature_encoder()
+        
         self.ser_model.to(self.device)
 
     def init_optimizer(self):

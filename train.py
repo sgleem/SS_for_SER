@@ -73,21 +73,21 @@ def main(args):
         => All the lists must be sorted in the same order
     """
     snum=10000000000000000
-    train_feat_path = DataManager.get_wav_path("msp-podcast", args.data_type, "train")[:snum]
+    train_feat_path = DataManager.get_wav_path("msp-podcast", args.data_type, "train", snr=args.snr)[:snum]
     train_utts = DataManager.get_utt_list("msp-podcast", "train")[:snum]
     train_labs = DataManager.get_msp_labels(train_utts, lab_type=lab_type)
     train_wavs = sg_utils.WavExtractor(train_feat_path).extract()
 
-    dev_feat_path = DataManager.get_wav_path("msp-podcast", args.data_type, "dev")[:snum]
+    dev_feat_path = DataManager.get_wav_path("msp-podcast", args.data_type, "dev", snr=args.snr)[:snum]
     dev_utts = DataManager.get_utt_list("msp-podcast", "dev")[:snum]
     dev_labs = DataManager.get_msp_labels(dev_utts)
     dev_wavs = sg_utils.WavExtractor(dev_feat_path).extract()
     ###################################################################################################
 
     train_set = sg_utils.WavSet(train_wavs, train_labs, train_utts, print_dur=True, lab_type=lab_type)
-    dev_set = sg_utils.WavSet(dev_wavs, dev_labs, dev_utts, print_dur=True, lab_type=lab_type)#,
-    #     wav_mean = train_set.wav_mean, wav_std = train_set.wav_std)
-    # train_set.save_norm_stat(model_path+"/train_norm_stat.pkl")
+    dev_set = sg_utils.WavSet(dev_wavs, dev_labs, dev_utts, print_dur=True, lab_type=lab_type,
+        wav_mean = train_set.wav_mean, wav_std = train_set.wav_std)
+    train_set.save_norm_stat(model_path+"/train_norm_stat.pkl")
     
     total_dataloader={
         "train": DataLoader(train_set, batch_size=args.batch_size, collate_fn=sg_utils.collate_fn_padd, shuffle=True),
@@ -265,6 +265,10 @@ if __name__ == "__main__":
     parser.add_argument(
         '--data_type',
         default="clean",
+        type=str)
+    parser.add_argument(
+        '--snr',
+        default=None,
         type=str)
     parser.add_argument(
         '--model_type',
