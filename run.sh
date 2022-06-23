@@ -5,7 +5,7 @@ for seed in 0; do
     python -u train.py \
     --device            cuda \
     --data_type         clean \
-    --model_type        wav2vec2 \
+    --model_type        data2vec \
     --conf_path         conf.json \
     --seed              ${seed} \
     --batch_size        16 \
@@ -13,20 +13,20 @@ for seed in 0; do
     --num_layers        2 \
     --epochs            10 \
     --lr                1e-4 \
-    --model_path        model/wav2vec2/1_8/clean_${seed}
+    --model_path        model/data2vec/1_7/clean_${seed}
 
     # ## Evaluation
     python -u test.py \
     --device            cuda \
     --data_type         clean \
-    --model_type        wav2vec2 \
+    --model_type        data2vec \
     --train_type        manually_finetuned \
     --conf_path         conf.json \
     --seed              ${seed} \
     --batch_size        1 \
     --hidden_dim        1024 \
     --num_layers        2 \
-    --model_path        model/wav2vec2/1_8/clean_${seed}
+    --model_path        model/data2vec/1_7/clean_${seed}
 
     # for snr in 10db 5db 0db; do
     #     echo $snr

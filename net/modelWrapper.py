@@ -43,8 +43,8 @@ class ModelWrapper():
             is_large = True
         
         elif self.model_type == "data2vec":
-            print("Loading data2vec-audio-base-960h model")
-            self.wav2vec_model= Data2VecAudioModel.from_pretrained("facebook/data2vec-audio-base-960h")
+            print("Loading data2vec-audio-large-960h model")
+            self.wav2vec_model= Data2VecAudioModel.from_pretrained("facebook/data2vec-audio-large-960h")
             # del self.wav2vec_model.encoder.layers[12:]
             self.wav2vec_model.freeze_feature_encoder()
             is_large = True
