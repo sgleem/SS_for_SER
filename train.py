@@ -40,8 +40,13 @@ def main(args):
         #     sample_num = args.sample_num
         # )
     lab_type = args.label_type
-    if args.label_type == "dimensional":
-        assert args.output_num == 3
+    print(lab_type)
+    # if args.label_type == "dimensional":
+    #     assert args.output_num == 3
+
+    if args.label_type == "categorical":
+        assert args.output_num == 4
+
     # total_utt_dict={"train": None, "dev": None}
     # total_dataset={"train": None, "dev": None}
     # total_dataloader={"train": None, "dev": None}
@@ -134,11 +139,11 @@ def main(args):
                 
                 ## Calculate loss
                 total_loss = 0.0
-                if args.label_type == "dimensional":
-                    ccc = sg_utils.CCC_loss(pred, y)
-                    loss = 1.0-ccc
-                    total_loss += loss[0] + loss[1] + loss[2]
-                elif args.label_type == "categorical":
+                # if args.label_type == "dimensional":
+                #     ccc = sg_utils.CCC_loss(pred, y)
+                #     loss = 1.0-ccc
+                #     total_loss += loss[0] + loss[1] + loss[2]
+                if args.label_type == "categorical":
                     loss = sg_utils.CE_category(pred, y)
                     total_loss += loss
                     acc = sg_utils.calc_acc(pred, y)
@@ -273,7 +278,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--label_type',
         choices=['dimensional', 'categorical'],
-        default='dimensional',
+        default='categorical',
         type=str)
 
     # Chunk Arguments
@@ -293,7 +298,7 @@ if __name__ == "__main__":
         type=str)
     parser.add_argument(
         '--output_num',
-        default=3,
+        default=4,
         type=int)
     parser.add_argument(
         '--batch_size',

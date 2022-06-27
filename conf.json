@@ -26,8 +26,8 @@
         },
         "data_split":{
             "Train": "Train", "train": "Train",
-            "Validation": "Validation", "dev": "Validation", "dev-1.10": "Development", "Development": "Development",
-            "Test1": "Test1", "Test": "Test1", "test": "Test1",
+            "Development": "Development", "dev": "Development", "dev-1.10": "Development",
+            "Test1": "Test", "Test": "Test", "test": "Test",
             "Test2": "Test2"
         }
     },
@@ -45,10 +45,10 @@
         "HLD": "/media/kyunster/backup/DCASE/IS13/hld"
     },
     "MSP-Podcast":{
-        "Partition": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/Partitions.txt",
-        "label": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/Labels/labels_concensus.csv",
+        "Partition": "/home/david/SER_Hackathon/data/USC-IEMOCAP/IEMOCAP_partitions/partitions_1.txt",
+        "label": "/home/david/SER_Hackathon/data/USC-IEMOCAP/labels_consensus_4class_M/labels_consensus_1.csv",
         "wav":{
-            "clean": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/16khz",
+            "clean": "/home/david/SER_Hackathon/data/USC-IEMOCAP/Audios",
             "noisy/10db": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/corrupted/10db/msp_podcast_v1.8",
             "noisy/5db": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/corrupted/5db/msp_podcast_v1.8",
             "noisy/0db": "/media/kyunster/hdd/corpus/MSP_Podcast_1.8/corrupted/0db/msp_podcast_v1.8",

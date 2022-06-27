@@ -41,6 +41,7 @@ class HLD(nn.Module):
     def forward(self, x):
         h=self.get_repr(x)
         result = self.out(h)
-        if self.prediction_type == "categorical":
-            result = F.softmax(result, dim=1)
+        #if self.prediction_type == "categorical":
+            #print('categorical now!!!')
+            #result = F.softmax(result, dim=1)
         return result
