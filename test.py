@@ -19,7 +19,7 @@ import torch.optim as optim
 from transformers import Wav2Vec2Processor, Wav2Vec2Model
 
 # Self-Written Modules
-sys.path.append("/media/kyunster/hdd/Project/SS_for_SER_comparison")
+sys.path.append(os.getcwd())
 import sg_utils
 import net
 

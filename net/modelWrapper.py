@@ -6,7 +6,7 @@ from transformers import Wav2Vec2Model, WavLMModel, HubertModel
 import torch
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
-sys.path.append("/media/kyunster/hdd/Project/SS_for_SER")
+sys.path.append(os.getcwd())
 import sg_utils
 
 class ModelWrapper():
@@ -31,19 +31,32 @@ class ModelWrapper():
         """
         Define model and load pretrained weights
         """
-        assert self.model_type in ["wav2vec2", "hubert", "wavlm"], \
+        assert self.model_type in [
+            "wav2vec2", "hubert", "wavlm", "data2vec",
+            "wav2vec2-base", "wav2vec2-large", "wav2vec2-large-robust",
+            "hubert-base", "hubert-large",
+            "wavlm-base", "wavlm-base-plus", "wavlm-large",
+            "data2vec-base", "data2vec-large"], \
             print("Wrong model type")
-        # If base model, set it to False
-        if self.model_type == "wav2vec2":
+        # If base model, set is_large to False
+        default_models={
+            "wav2vec2": "wav2vec2-large-robust",
+            "hubert": "hubert-large",
+            "wavlm": "wavlm-large",
+            "data2vec": "data2vec-large",
+        }
+        real_model_name = default_models.get(self.model_type, self.model_type)
+
+        if real_model_name == "wav2vec2":
             self.wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-robust")
             del self.wav2vec_model.encoder.layers[12:]
             is_large = True 
 
-        elif self.model_type == "hubert":
+        elif real_model_name == "hubert":
             self.wav2vec_model= HubertModel.from_pretrained("facebook/hubert-large-ll60k")
             is_large = True 
 
-        elif self.model_type == "wavlm":
+        elif real_model_name == "wavlm":
             # self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-large")
             self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-base-plus")
             is_large = False
