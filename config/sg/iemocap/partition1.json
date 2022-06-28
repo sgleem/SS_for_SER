@@ -1,0 +1,17 @@
+{
+    "audio_path": "/media/kyunster/hdd/corpus/USC-IEMOCAP/Audios",
+    "label_path": "/media/kyunster/hdd/corpus/USC-IEMOCAP/label_concensus/label_concensus_1.csv",
+    "data_split_type":{
+        "train": "Train",
+        "dev": "Development", 
+        "test": "Test"
+    },
+    "categorical":{
+        "emo_type": ["angry", "sad", "neutral", "happy"]
+    },
+    "dimensional":{
+        "max_score": 5,
+        "min_score": 1
+    },
+    "description": "IEMOCAP corpus - Partition 1 in Seong's computer"
+}

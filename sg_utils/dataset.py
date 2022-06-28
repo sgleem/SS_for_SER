@@ -76,10 +76,13 @@ class WavSet(torch_utils.data.Dataset):
             cur_lab = self.lab_list[idx]
             ## MSP-Podcast
             cur_lab = (cur_lab - 1) / (7-1)
-            ## MSP-IMPROV
+            ## MSP-IMPROV/USC-IEMOCAP/NTHU-NIIME
             # cur_lab[0] = (((cur_lab[0])-3)*(-1))+3
             # cur_lab = (cur_lab - 1) / (5-1)
-        
+        elif self.lab_type == "categorical":
+            cur_lab = self.lab_list[idx]
+
+
         result = (cur_wav, cur_lab)
         if self.print_dur:
             result = (cur_wav, cur_lab, cur_dur)

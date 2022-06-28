@@ -19,7 +19,7 @@ import torch.optim as optim
 from transformers import Wav2Vec2Processor, Wav2Vec2Model
 
 # Self-Written Modules
-sys.path.append("/media/kyunster/hdd/Project/SS_for_SER_comparison")
+sys.path.append(os.getcwd())
 import sg_utils
 import net
 
@@ -42,6 +42,8 @@ def main(args):
     lab_type = args.label_type
     if args.label_type == "dimensional":
         assert args.output_num == 3
+    elif args.label_type == "categorical":
+        assert args.output_num == 4
     DataManager=sg_utils.DataManager("conf.json")
     test_wav_path = DataManager.get_wav_path("msp-podcast", args.data_type, "test", snr=args.snr)
     test_utts = DataManager.get_utt_list("msp-podcast", "test")
@@ -160,7 +162,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--label_type',
         choices=['dimensional', 'categorical'],
-        default='dimensional',
+        default='categorical',
         type=str)
 
     # Chunk Arguments
@@ -188,7 +190,7 @@ if __name__ == "__main__":
         type=str)
     parser.add_argument(
         '--output_num',
-        default=3,
+        default=4,
         type=int)
     parser.add_argument(
         '--model_path',

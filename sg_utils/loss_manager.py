@@ -111,20 +111,25 @@ def MSE_emotion(pred, lab):
     return [aro_loss, dom_loss, val_loss]
 
 def CE_category(pred, lab):
-    return F.cross_entropy(pred, lab)
+    lsm = F.log_softmax(pred, -1)
+    loss = -(lab * lsm).sum(-1)
+    return loss.mean()
+
 
 def NLL_category(pred, lab):
     return nn.NLLLoss()(pred, lab)
+
 
 def calc_err(pred, lab):
     p = pred.detach()
     t = lab.detach()
     total_num = p.size()[0]
     ans = torch.argmax(p, dim=1)
-    corr = torch.sum((ans==t).long())
-
+    tar = torch.argmax(t, dim=1)
+    #print('ans',ans.shape)
+    #print('tar',tar.shape)
+    corr = torch.sum((ans==tar).long())
     err = (total_num-corr) / total_num
-
     return err
 
 def calc_acc(pred, lab):

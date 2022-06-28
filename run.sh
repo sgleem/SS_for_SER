@@ -1,137 +1,41 @@
 #!/bin/bash
+# Configuration
+mtype=wav2vec2 
+### Model type
+## [wav2vec2-base, wav2vec2-large, wav2vec2-large-robust
+## hubert-base, hubert-large, 
+## wavlm-base, wavlm-base-plus, wavlm-large,
+## data2vec-base, data2vec-large]
+### Default model type
+## wav2vec2: wav2vec2-large-robust
+## hubert: hubert-large, 
+## wavlm: wavlm-large,
+## data2vec: data2vec-large
+corpus_type=podcast_v1.8
+seed=0
 
-for seed in 0; do
-    ## Training
-    python -u train.py \
-    --device            cuda \
-    --data_type         clean \
-    --model_type        data2vec \
-    --conf_path         conf.json \
-    --seed              ${seed} \
-    --batch_size        16 \
-    --hidden_dim        1024 \
-    --num_layers        2 \
-    --epochs            10 \
-    --lr                1e-4 \
-    --model_path        model/data2vec/1_7/clean_${seed}
+## Training
+python -u train.py \
+--device            cuda \
+--model_type        $mtype \
+--corpus_type       $corpus_type \
+--seed              $seed \
+--batch_size        16 \
+--epochs            20 \
+--lr                1e-4 \
+--hidden_dim        1024 \
+--num_layers        2 \
+--model_path        model/${mtype}/${corpus_type}/${seed}.json \
+--label_type        categorical 
 
-    # ## Evaluation
-    python -u test.py \
-    --device            cuda \
-    --data_type         clean \
-    --model_type        data2vec \
-    --train_type        manually_finetuned \
-    --conf_path         conf.json \
-    --seed              ${seed} \
-    --batch_size        1 \
-    --hidden_dim        1024 \
-    --num_layers        2 \
-    --model_path        model/data2vec/1_7/clean_${seed}
-
-    # for snr in 10db 5db 0db; do
-    #     echo $snr
-    #     python -u test.py \
-    #     --device            cuda \
-    #     --data_type         noisy \
-    #     --snr               $snr \
-    #     --model_type        wav2vec2 \
-    #     --train_type        manually_finetuned \
-    #     --conf_path         conf.json \
-    #     --seed              ${seed} \
-    #     --batch_size        1 \
-    #     --hidden_dim        1024 \
-    #     --num_layers        2 \
-    #     --model_path        model/wav2vec2/1_8/clean_${seed}
-    # done
-
-    # # augmented noise
-    # python -u retrain.py \
-    # --device            cuda \
-    # --data_type         manual_noisy_speech \
-    # --snr               10db \
-    # --model_type        wav2vec2 \
-    # --seed              ${seed} \
-    # --batch_size        16 \
-    # --hidden_dim        1024 \
-    # --num_layers        2 \
-    # --epochs            10 \
-    # --lr                1e-4 \
-    # --noise_dur         30m \
-    # --original_model_path model/wav2vec2/1_8/clean_${seed} \
-    # --model_path        model/wav2vec2_finetune/1_8/10db_noisysample_${seed}
-
-    # # ## Evaluation
-    # echo clean
-    # python -u test.py \
-    # --device            cuda \
-    # --data_type         clean \
-    # --model_type        wav2vec2 \
-    # --train_type        manually_finetuned \
-    # --conf_path         conf.json \
-    # --seed              ${seed} \
-    # --batch_size        1 \
-    # --hidden_dim        1024 \
-    # --num_layers        2 \
-    # --model_path        model/wav2vec2_finetune/1_8/10db_noisysample_${seed}
-
-    # for snr in 10db 5db 0db; do
-    #     echo $snr
-    #     python -u test.py \
-    #     --device            cuda \
-    #     --data_type         noisy \
-    #     --snr               $snr \
-    #     --model_type        wav2vec2 \
-    #     --train_type        manually_finetuned \
-    #     --conf_path         conf.json \
-    #     --seed              ${seed} \
-    #     --batch_size        1 \
-    #     --hidden_dim        1024 \
-    #     --num_layers        2 \
-    #     --model_path        model/wav2vec2_finetune/1_8/10db_noisysample_${seed}
-    # done
-    # # real noise
-    # python -u retrain.py \
-    # --device            cuda \
-    # --data_type         noisy \
-    # --snr               10db \
-    # --model_type        wav2vec2 \
-    # --seed              ${seed} \
-    # --batch_size        16 \
-    # --hidden_dim        1024 \
-    # --num_layers        2 \
-    # --epochs            10 \
-    # --lr                1e-4 \
-    # --noise_dur         30m \
-    # --original_model_path model/wav2vec2/1_8/clean_${seed} \
-    # --model_path        model/wav2vec2_finetune/1_8/10db_real_noisy_${seed}
-
-    # # ## Evaluation
-    # echo clean
-    # python -u test.py \
-    # --device            cuda \
-    # --data_type         clean \
-    # --model_type        wav2vec2 \
-    # --train_type        manually_finetuned \
-    # --conf_path         conf.json \
-    # --seed              ${seed} \
-    # --batch_size        1 \
-    # --hidden_dim        1024 \
-    # --num_layers        2 \
-    # --model_path        model/wav2vec2_finetune/1_8/10db_real_noisy_${seed}
-
-    # for snr in 10db 5db 0db; do
-    #     echo $snr
-    #     python -u test.py \
-    #     --device            cuda \
-    #     --data_type         noisy \
-    #     --snr               $snr \
-    #     --model_type        wav2vec2 \
-    #     --train_type        manually_finetuned \
-    #     --conf_path         conf.json \
-    #     --seed              ${seed} \
-    #     --batch_size        1 \
-    #     --hidden_dim        1024 \
-    #     --num_layers        2 \
-    #     --model_path        model/wav2vec2_finetune/1_8/10db_real_noisy_${seed}
-    # done
-done
+## Evaluation
+python -u test.py \
+--device            cuda \
+--model_type        $mtype \
+--corpus_type       $corpus_type \
+--seed              $seed \
+--batch_size        1 \
+--hidden_dim        1024 \
+--num_layers        2 \
+--model_path        model/${mtype}/${corpus_type}/${seed}.json \
+--label_type        categorical 

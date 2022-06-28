@@ -1,0 +1,10 @@
+{
+    "config_root": "config/sg",
+    "podcast_v1.7": "msp-podcast/1.7.json",
+    "podcast_v1.8": "msp-podcast/1.8.json",
+    "podcast_v1.9": "msp-podcast/1.9.json",
+    "podcast_v1.10": "msp-podcast/1.10.json",
+    "iemocap-partition1": "iemocap/partition1.json",
+    "improv-partition1": "improv/partition1.json",
+    "cream_d": "crema_d.json"
+}
