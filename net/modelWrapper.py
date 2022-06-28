@@ -43,7 +43,7 @@ class ModelWrapper():
             "wavlm-base", "wavlm-base-plus", "wavlm-large",
             "data2vec-base", "data2vec-large"], \
             print("Wrong model type")
-        # If base model, set is_large to False
+        
         default_models={
             "wav2vec2": "wav2vec2-large-robust",
             "hubert": "hubert-large",
@@ -51,29 +51,70 @@ class ModelWrapper():
             "data2vec": "data2vec-large",
         }
         real_model_name = default_models.get(self.model_type, self.model_type)
+        assert real_model_name not in ["wav2vec2", "hubert", "wavlm", "data2vec"],
+            print("Model name is not properly converted.\n \
+                Current model_name:", real_model_name
+            )
+        
+        root_model_type = real_model_name.split("-")[0]
+        assert root_model_type in ["wav2vec2", "hubert", "wavlm", "data2vec"],
+            print("Can't specify the root model type\n \
+                Current root_model_type:", root_model_type
+            )
 
-        if real_model_name == "wav2vec2":
-            self.wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-robust")
-            del self.wav2vec_model.encoder.layers[12:]
+        arch_type = real_model_name.split("-")[1]
+        assert arch_type in ["base", "large"],
+            print("Can't specify the architecture type\n \
+                architecture_type:", arch_type
+            )
+
+        # If base model, set is_large to False
+        is_large = True 
+            if arch_type == "large" 
+            elif arch_type == "base" False
+            else raise ValueError
+        print("Loading", real_model_name)
+        #### Wav2vec2
+        if root_model_type == "wav2vec2":
+            """
+            Additional settings
+            - Freeze feature encoder (for all wav2vec2 models)
+            - Prune top 12 transformer layers (for wav2vec2-large-robust)
+            """
+            self.wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/"+real_model_name)
             self.wav2vec_model.freeze_feature_encoder()
-            is_large = True
-        
-        elif real_model_name == "data2vec":
-            print("Loading data2vec-audio-large-960h model")
-            self.wav2vec_model= Data2VecAudioModel.from_pretrained("facebook/data2vec-audio-large-960h")
-            # del self.wav2vec_model.encoder.layers[12:]
+            if real_model_name == "wav2vec2-large-robust":
+                del self.wav2vec_model.encoder.layers[12:]
+        elif root_model_type == "data2vec":
+            """
+            Additional settings
+            - Freeze feature encoder (for all data2vec models)
+            """
+            if real_model_name == "data2vec-large":
+                self.wav2vec_model= Data2VecAudioModel.from_pretrained("facebook/data2vec-audio-large-960h")
+            elif real_model_name == "data2vec-base":
+                self.wav2vec_model= Data2VecAudioModel.from_pretrained("facebook/data2vec-audio-base-960h")
             self.wav2vec_model.freeze_feature_encoder()
-            is_large = True
+            
         elif real_model_name == "hubert":
-            self.wav2vec_model= HubertModel.from_pretrained("facebook/hubert-large-ll60k")
+            """
+            Additional settings
+            - Freeze feature encoder (for all hubert models)
+            """
+            if real_model_name == "hubert-large":
+                self.wav2vec_model= HubertModel.from_pretrained("facebook/hubert-large-ll60k")
+            elif real_model_name == "hubert-base":
+                self.wav2vec_model= HubertModel.from_pretrained("facebook/hubert-base-ls960")
             self.wav2vec_model.feature_extractor._freeze_parameters()
-            is_large = True 
+            
         elif real_model_name == "wavlm":
-            print("Loading WavLM-large model")
-            self.wav2vec_model= WavLMModel.from_pretrained("microsoft/wavlm-large")
+            """
+            Additional settings
+            - Freeze feature encoder (for all wavlm models)
+            """
+            self.wav2vec_model= WavLMModel.from_pretrained("microsoft/"+real_model_name)
             self.wav2vec_model.freeze_feature_encoder()
-            is_large = True
-        
+            
         idim = 1024 if is_large else 768
         self.ser_model = ser.HLD(
             idim,
