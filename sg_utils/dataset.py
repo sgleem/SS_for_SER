@@ -9,6 +9,16 @@ from .normalizer import get_norm_stat_for_melspec
 import librosa
 from . import normalizer
 import pickle as pk
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 class MelSetForGAN(torch_utils.data.Dataset):
     def __cut_segment__(self, cur_spec, max_dur, step_size):
         """
@@ -54,6 +64,18 @@ class WavSet(torch_utils.data.Dataset):
         self.wav_mean = kwargs.get("wav_mean", None)
         self.wav_std = kwargs.get("wav_std", None)
 
+        self.label_config = kwargs.get("label_config", None)
+
+        ## Assertion
+        if self.lab_type == "categorical":
+            assert len(self.label_config.get("emo_type", [])) != 0, "Wrong emo_type in config file"
+        elif self.lab_type == "dimensional":
+            assert self.label_config.get("max_score", None) != None and self.label_config.get("min_score", None) != None, 
+            "You need to specify maximum and minimum attribute score in config file"
+            self.max_score =  self.label_config["max_score"]
+            self.min_score =  self.label_config["min_score"]
+            self.flip_aro = str2bool(self.label_config.get("flip_aro", False))
+        
         # check max duration
         self.max_dur = np.min([np.max([len(cur_wav) for cur_wav in self.wav_list]), 12*16000])
         if self.wav_mean is None or self.wav_std is None:
@@ -74,11 +96,10 @@ class WavSet(torch_utils.data.Dataset):
         
         if self.lab_type == "dimensional":
             cur_lab = self.lab_list[idx]
-            ## MSP-Podcast
-            cur_lab = (cur_lab - 1) / (7-1)
-            ## MSP-IMPROV/USC-IEMOCAP/NTHU-NIIME
-            # cur_lab[0] = (((cur_lab[0])-3)*(-1))+3
-            # cur_lab = (cur_lab - 1) / (5-1)
+            if self.flip_aro:
+                cur_lab[0] = 6 - (cur_lab[0])
+            cur_lab = (cur_lab - self.min_lab_score) / (self.max_lab_score-self.min_lab_score)
+            
         elif self.lab_type == "categorical":
             cur_lab = self.lab_list[idx]
 

@@ -24,39 +24,27 @@ import sg_utils
 import net
 
 def main(args):
-    seed = args.seed
-    os.environ["CUBLAS_WORKSPACE_CONFIG"]=":4096:8"
-    torch.set_deterministic(True)
-    torch.manual_seed(seed)
-    np.random.seed(seed)
+    sg_utils.set_deterministic(args.seed)
+    config_dict = sg_utils.load_env(args.conf_path)
+    assert config_dict.get("config_root", None) != None, "No config_root in config/conf.json"
+    assert config_dict.get(args.corpus_type, None) != None, "Change config/conf.json"
+    config_path = os.path.join(config_dict["config_root"], config_dict[args.corpus_type])
+    sg_utils.print_config_description(config_path)
     
-    ###################################################################################################
-    """
-    lab_type: "categorical" or "dimensional"
-    For test set,
-        test_wavs: list of raw wavs (not a filepath, sampled with 16kHz)
-        test_labs: list of labels (categorical: one-hot or normalized vectors)
-        test_utts: list of utterances
-        => All the lists must be sorted in the same order
-    """
+    DataManager=sg_utils.DataManager(config_path)
     lab_type = args.label_type
+    print(lab_type)
     if args.label_type == "dimensional":
         assert args.output_num == 3
     elif args.label_type == "categorical":
-        assert args.output_num == 4
-    DataManager=sg_utils.DataManager("conf.json")
-    test_wav_path = DataManager.get_wav_path("msp-podcast", args.data_type, "test", snr=args.snr)
-    test_utts = DataManager.get_utt_list("msp-podcast", "test")
+        emo_num = DataManager.get_categorical_emo_num()
+        assert args.output_num == emo_num
+        
+    test_wav_path = DataManager.get_wav_path(split_type="test")
+    test_utts = DataManager.get_utt_list("test")
     test_wav_path.sort()
     test_utts.sort()
     test_labs = DataManager.get_msp_labels(test_utts, lab_type=lab_type)
-
-    # DataManager=sg_utils.DataManager("env/msp_improv.json")
-    # # DataManager=sg_utils.DataManager("env/msp-podcast/1.10.json")
-    # test_utts = DataManager.get_utt_list("msp-podcast", "test")
-    # test_labs = DataManager.get_msp_labels(test_utts, lab_type=lab_type)
-
-    # test_wav_path = [DataManager.env_dict["audio_path"]+"/"+utt_id for utt_id in test_utts]
     test_wavs = sg_utils.WavExtractor(test_wav_path).extract()
     ###################################################################################################
     with open(args.model_path+"/train_norm_stat.pkl", 'rb') as f:
@@ -95,16 +83,9 @@ def main(args):
             y=y.cuda(non_blocking=True).float()
             mask=mask.cuda(non_blocking=True).float()
             
-            # if args.train_type == "manually_finetuned":
             pred = modelWrapper.feed_forward(x, attention_mask=mask, eval=True)
             total_pred.append(pred)
             total_y.append(y)
-
-            # if args.train_type == "msp17_finetuned":
-            #     pred = model(x)[1]
-            #     total_pred.append(pred)
-            #     total_y.append(y)
-
             
         total_pred = torch.cat(total_pred, 0)
         total_y = torch.cat(total_y, 0)
@@ -145,6 +126,10 @@ if __name__ == "__main__":
         '--seed',
         default=0,
         type=int)
+    parser.add_argument(
+        '--conf_path',
+        default="config/conf.json",
+        type=str)
 
     # Data Arguments
     parser.add_argument(
@@ -152,12 +137,16 @@ if __name__ == "__main__":
         default="clean",
         type=str)
     parser.add_argument(
+        '--corpus_type',
+        default="podcast_v1.7",
+        type=str)
+    parser.add_argument(
         '--snr',
         default=None,
         type=str)
     parser.add_argument(
-        '--feature_type',
-        default="wav2vec",
+        '--model_type',
+        default="wav2vec2",
         type=str)
     parser.add_argument(
         '--label_type',
@@ -177,25 +166,13 @@ if __name__ == "__main__":
     
     # Model Arguments
     parser.add_argument(
-        '--conf_path',
-        default="conf.json",
-        type=str)
-    parser.add_argument(
-        '--model_type',
-        default="wav2vec",
-        type=str)
-    parser.add_argument(
-        '--train_type',
-        default="manually_finetuned",
+        '--model_path',
+        default=None,
         type=str)
     parser.add_argument(
         '--output_num',
         default=4,
         type=int)
-    parser.add_argument(
-        '--model_path',
-        default=None,
-        type=str)
     parser.add_argument(
         '--batch_size',
         default=128,
