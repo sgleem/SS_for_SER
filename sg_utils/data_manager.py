@@ -136,5 +136,5 @@ class DataManager:
 
     def get_label_config(self, label_type):
         assert label_type in ["categorical", "dimensional"]
-        return self.env_dict[lab_type]
+        return self.env_dict[label_type]
         

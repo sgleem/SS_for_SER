@@ -133,19 +133,20 @@ class ModelWrapper():
 
         self.model_type_list = ["head", "wav2vec"]
         if self.use_chunk:
-            self.enable_chunk_model(input_dim=idim)
-            model_type_list.append("chunk")
+            self.enable_chunk_model(idim)
+            self.model_type_list.append("chunk")
 
     def enable_chunk_model(self, *args, **kwargs):
         assert self.use_chunk == True
         print("Apply chunk-based segmentation")
-        chunk_input_dim = kwargs.get("input_dim", args[0])
+        chunk_input_dim = args[0]
         self.chunk_model = chunk.LSTM_AttenVec(
             chunk_input_dim, 
             self.chunk_hidden_dim,
             window_size = self.chunk_window,
             chunk_num = self.chunk_num
         )
+        self.chunk_model.to(self.device)
         
     def init_optimizer(self):
         """
@@ -156,6 +157,8 @@ class ModelWrapper():
         
         self.wav2vec_opt = optim.Adam(self.wav2vec_model.parameters(), lr=self.lr)
         self.ser_opt = optim.Adam(self.ser_model.parameters(), lr=self.lr)
+        if self.use_chunk:
+            self.chunk_opt = optim.Adam(self.chunk_model.parameters(), lr=self.lr)
         self.scaler = GradScaler()
     
     def feed_forward(self, x, eval=False, **kwargs):
@@ -193,6 +196,8 @@ class ModelWrapper():
         self.scaler.scale(total_loss).backward()
         self.scaler.step(self.wav2vec_opt)
         self.scaler.step(self.ser_opt)
+        if self.use_chunk:
+            self.scaler.step(self.chunk_opt)
         self.scaler.update()
 
     def save_model(self, epoch):

@@ -72,8 +72,8 @@ class WavSet(torch_utils.data.Dataset):
         elif self.lab_type == "dimensional":
             assert self.label_config.get("max_score", None) != None and self.label_config.get("min_score", None) != None, \
             "You need to specify maximum and minimum attribute score in config file"
-            self.max_score =  self.label_config["max_score"]
-            self.min_score =  self.label_config["min_score"]
+            self.max_lab_score =  self.label_config["max_score"]
+            self.min_lab_score =  self.label_config["min_score"]
             self.flip_aro = str2bool(self.label_config.get("flip_aro", False))
         
         # check max duration
