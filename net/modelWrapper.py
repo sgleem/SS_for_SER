@@ -96,7 +96,7 @@ class ModelWrapper():
                 self.wav2vec_model= Data2VecAudioModel.from_pretrained("facebook/data2vec-audio-base-960h")
             self.wav2vec_model.freeze_feature_encoder()
             
-        elif real_model_name == "hubert":
+        elif root_model_type == "hubert":
             """
             Additional settings
             - Freeze feature encoder (for all hubert models)
@@ -107,7 +107,7 @@ class ModelWrapper():
                 self.wav2vec_model= HubertModel.from_pretrained("facebook/hubert-base-ls960")
             self.wav2vec_model.feature_extractor._freeze_parameters()
             
-        elif real_model_name == "wavlm":
+        elif root_model_type == "wavlm":
             """
             Additional settings
             - Freeze feature encoder (for all wavlm models)
