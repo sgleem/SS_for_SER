@@ -6,12 +6,8 @@ from transformers import Wav2Vec2Model, WavLMModel, HubertModel, Data2VecAudioMo
 import torch
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
-<<<<<<< HEAD
-# import fairseq
-sys.path.append("/media/kyunster/hdd/Project/SS_for_SER")
-=======
+
 sys.path.append(os.getcwd())
->>>>>>> master
 import sg_utils
 
 class ModelWrapper():
