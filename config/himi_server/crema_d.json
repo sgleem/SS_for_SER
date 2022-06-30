@@ -1,0 +1,17 @@
+{
+    "audio_path": "/media/kyunster/hdd/corpus/CREMA-D/auds_mono",
+    "label_path": "/media/kyunster/hdd/corpus/CREMA-D/labels_concensus.csv",
+    "data_split_type":{
+        "train": "Train",
+        "dev": "Development", 
+        "test": "Test"
+    },
+    "categorical":{
+        "emo_type": ["A", "C", "D", "F", "H", "N", "O", "S", "U", "X"]
+    },
+    "dimensional":{
+        "max_score": 5,
+        "min_score": 1
+    },
+    "description": "CREMA-D corpus in Seong's computer"
+}

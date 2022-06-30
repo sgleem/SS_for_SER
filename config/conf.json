@@ -1,5 +1,5 @@
 {
-    "config_root": "config/sg",
+    "config_root": "config/himi_server",
     "podcast_v1.7": "msp-podcast/1.7.json",
     "podcast_v1.8": "msp-podcast/1.8.json",
     "podcast_v1.9": "msp-podcast/1.9.json",

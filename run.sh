@@ -1,6 +1,6 @@
 #!/bin/bash
 # Configuration
-mtype=wav2vec2 
+mtype=hubert
 ### Model type
 ## [wav2vec2-base, wav2vec2-large, wav2vec2-large-robust
 ## hubert-base, hubert-large, 
@@ -11,7 +11,7 @@ mtype=wav2vec2
 ## hubert: hubert-large, 
 ## wavlm: wavlm-large,
 ## data2vec: data2vec-large
-corpus_type=podcast_v1.8
+corpus_type=podcast_v1.7
 seed=0
 
 ## Training
@@ -25,8 +25,9 @@ python -u train.py \
 --lr                1e-4 \
 --hidden_dim        1024 \
 --num_layers        2 \
+--output_num        10 \
 --model_path        model/${mtype}/${corpus_type}/${seed}.json \
---label_type        categorical 
+--label_type        categorical || exit 1;
 
 ## Evaluation
 python -u test.py \
@@ -37,5 +38,6 @@ python -u test.py \
 --batch_size        1 \
 --hidden_dim        1024 \
 --num_layers        2 \
+--output_num        10 \
 --model_path        model/${mtype}/${corpus_type}/${seed}.json \
---label_type        categorical 
+--label_type        categorical || exit 1;

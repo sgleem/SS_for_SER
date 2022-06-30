@@ -70,7 +70,7 @@ class WavSet(torch_utils.data.Dataset):
         if self.lab_type == "categorical":
             assert len(self.label_config.get("emo_type", [])) != 0, "Wrong emo_type in config file"
         elif self.lab_type == "dimensional":
-            assert self.label_config.get("max_score", None) != None and self.label_config.get("min_score", None) != None, 
+            assert self.label_config.get("max_score", None) != None and self.label_config.get("min_score", None) != None, \
             "You need to specify maximum and minimum attribute score in config file"
             self.max_score =  self.label_config["max_score"]
             self.min_score =  self.label_config["min_score"]

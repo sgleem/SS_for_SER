@@ -47,6 +47,7 @@ def main(args):
 
     if args.label_type == "categorical":
         emo_num = DataManager.get_categorical_emo_num()
+        print(emo_num)
         assert args.output_num == emo_num
 
     snum=10000000000000000
@@ -249,6 +250,14 @@ if __name__ == "__main__":
         type=str)
 
     # Chunk Arguments
+    parser.add_argument(
+        '--use_chunk',
+        default=False,
+        type=str2bool)
+    parser.add_argument(
+        '--chunk_hidden_dim',
+        default=256,
+        type=int)
     parser.add_argument(
         '--chunk_window',
         default=50,

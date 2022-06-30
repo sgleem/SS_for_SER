@@ -1,0 +1,18 @@
+{
+    "audio_path": "/home/podcast/SER/corpus/MSP_Podcast_1.7/Audios",
+    "label_path": "/home/podcast/SER/corpus/MSP_Podcast_1.7/Labels/labels_concensus.csv",
+    "data_split_type":{
+        "train": "Train",
+        "dev": "Validation", 
+        "test": "Test1",
+        "Test2": "Test2"
+    },
+    "categorical":{
+        "emo_type": ["A", "C", "D", "F", "H", "N", "O", "S", "U", "X"]
+    },
+    "dimensional":{
+        "max_score": 7,
+        "min_score": 1
+    },
+    "description": "MSP-Podcast v1.7 in Himi's computer"
+}
