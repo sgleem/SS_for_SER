@@ -89,7 +89,7 @@ class DataManager:
             header = f.readline().split(",")
             emo_idx_list = []
             for emo_class in emo_class_list:
-                emo_idx_list.append(emo_class)
+                emo_idx_list.append(header.index(emo_class))
             # a_idx = header.index("angry")
             # s_idx = header.index("sad")
             # n_idx = header.index("neutral")
