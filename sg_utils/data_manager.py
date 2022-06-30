@@ -21,7 +21,7 @@ All DataManager classes should follow the following interface:
 """
 
 
-def load_env(self, env_path):
+def load_env(env_path):
     with open(env_path, 'r') as f:
         env_dict = json.load(f)
     return env_dict
@@ -41,7 +41,7 @@ class DataManager:
         if split_type == None:
             wav_list = glob.glob(os.path.join(wav_root, "*.wav"))
         else:
-            utt_list = self.get_utt_list(corpus_type, split_type)
+            utt_list = self.get_utt_list(split_type)
             wav_list = [os.path.join(wav_root, utt_id) for utt_id in utt_list]
         
         wav_list.sort()
