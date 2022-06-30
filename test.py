@@ -49,8 +49,11 @@ def main(args):
     ###################################################################################################
     with open(args.model_path+"/train_norm_stat.pkl", 'rb') as f:
         wav_mean, wav_std = pk.load(f)
-    test_set = sg_utils.WavSet(test_wavs, test_labs, test_utts, print_dur=True, lab_type=lab_type,
-        wav_mean = wav_mean, wav_std = wav_std)
+    test_set = sg_utils.WavSet(test_wavs, test_labs, test_utts, 
+        print_dur=True, lab_type=lab_type,
+        wav_mean = wav_mean, wav_std = wav_std, 
+        label_config = DataManager.get_label_config(lab_type)
+    )
 
 
     lm = sg_utils.LogManager()
@@ -155,6 +158,14 @@ if __name__ == "__main__":
         type=str)
 
     # Chunk Arguments
+    parser.add_argument(
+        '--use_chunk',
+        default=False,
+        type=str2bool)
+    parser.add_argument(
+        '--chunk_hidden_dim',
+        default=256,
+        type=int)
     parser.add_argument(
         '--chunk_window',
         default=50,

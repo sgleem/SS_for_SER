@@ -193,6 +193,8 @@ class ModelWrapper():
         """
         self.wav2vec_opt.zero_grad(set_to_none=True)
         self.ser_opt.zero_grad(set_to_none=True)
+        if self.use_chunk:
+            self.chunk_opt.zero_grad(set_to_none=True)
         self.scaler.scale(total_loss).backward()
         self.scaler.step(self.wav2vec_opt)
         self.scaler.step(self.ser_opt)
