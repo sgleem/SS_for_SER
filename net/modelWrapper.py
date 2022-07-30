@@ -40,7 +40,7 @@ class ModelWrapper():
         """
         assert self.model_type in [
             "wav2vec2", "hubert", "wavlm", "data2vec",
-            "wav2vec2-base", "wav2vec2-large", "wav2vec2-large-robust",
+            "wav2vec2-base", "wav2vec2-large", "wav2vec2-large-robust", "wav2vec-large-xlsr",
             "hubert-base", "hubert-large",
             "wavlm-base", "wavlm-base-plus", "wavlm-large",
             "data2vec-base", "data2vec-large"], \
@@ -85,7 +85,10 @@ class ModelWrapper():
             - Freeze feature encoder (for all wav2vec2 models)
             - Prune top 12 transformer layers (for wav2vec2-large-robust)
             """
-            self.wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/"+real_model_name)
+            if real_model_name == "wav2vec2-large-xlsr":
+                self.wav2vec_model= Wav2Vec2Model.from_pretrained("ydshieh/wav2vec2-large-xlsr-53-chinese-zh-cn-gpt")
+            else:
+                self.wav2vec_model= Wav2Vec2Model.from_pretrained("facebook/"+real_model_name)
             self.wav2vec_model.freeze_feature_encoder()
             if real_model_name == "wav2vec2-large-robust":
                 del self.wav2vec_model.encoder.layers[12:]

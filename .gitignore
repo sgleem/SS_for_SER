@@ -3,3 +3,8 @@ log/*
 *.pyc
 train_old.py
 retrain.py
+experiment/*
+figure/*
+result/*
+wandb/*
+*.wav
