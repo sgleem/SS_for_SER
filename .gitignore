@@ -3,3 +3,4 @@ log/*
 *.pyc
 train_old.py
 retrain.py
+run/*

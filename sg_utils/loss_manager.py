@@ -110,15 +110,43 @@ def MSE_emotion(pred, lab):
 
     return [aro_loss, dom_loss, val_loss]
 
+
+# For Hard-label learning
 def CE_category(pred, lab):
+    celoss = nn.CrossEntropyLoss()
+    max_indx = torch.argmax(lab, dim=1)
+    ce_loss = celoss(pred, max_indx)
+    return ce_loss
+
+# For Soft-label learning
+def SCE_category(pred, lab):
     lsm = F.log_softmax(pred, -1)
     loss = -(lab * lsm).sum(-1)
     return loss.mean()
 
+# For Multi-label learning
+def BCE_category(pred,lab):
+    bceloss = nn.BCEWithLogitsLoss()
+    p = pred.detach()
+    total_num = p.size()[1]
+    bar_thre = 0.05/(total_num-1)
+    # Multiple-hot vector
+    target = lab.detach()
+    target_multilabel = torch.zeros(target.size(), device=torch.device('cuda'))
+    target_multilabel[target>bar_thre]=1
+    bce_loss = bceloss(pred,target_multilabel)
+    # if we want the proabilities of preditions, pass the pred into the Sigmoid funtion.
+    return bce_loss
+
+# For Distribution-label learning
+def KLD_category(pred, lab):
+
+    log_pred = F.log_softmax(pred)
+    kl_loss = nn.KLDivLoss(reduction="batchmean")
+    return kl_loss(log_pred, lab)
 
 def NLL_category(pred, lab):
     return nn.NLLLoss()(pred, lab)
-
 
 def calc_err(pred, lab):
     p = pred.detach()
@@ -126,8 +154,6 @@ def calc_err(pred, lab):
     total_num = p.size()[0]
     ans = torch.argmax(p, dim=1)
     tar = torch.argmax(t, dim=1)
-    #print('ans',ans.shape)
-    #print('tar',tar.shape)
     corr = torch.sum((ans==tar).long())
     err = (total_num-corr) / total_num
     return err
@@ -154,10 +180,7 @@ def calc_rank_loss(pair_set, rank_scores):
     return loss
 
 def calc_gradient_penalty(netD, real_data, fake_data):
-    #print real_data.size()
     alpha = torch.rand_like(real_data)
-    # alpha = torch.ones_like(real_data)
-    # alpha = alpha.expand(real_data.size())
     alpha = alpha.cuda()
 
     interpolates = alpha * real_data + ((1 - alpha) * fake_data)
@@ -172,7 +195,6 @@ def calc_gradient_penalty(netD, real_data, fake_data):
                               create_graph=True, retain_graph=True, only_inputs=True)[0]
     gradients = gradients + 1e-16
     gradient_penalty = ((gradients.norm(2, dim=(1,2)) - 1) ** 2).mean()
-    # gradient_penalty = gradient_penalty.float()
     return gradient_penalty
 
 def calc_moving_average(pre_ma, cur_ma, gamma=0.99):

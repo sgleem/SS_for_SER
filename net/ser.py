@@ -4,15 +4,18 @@ import torch.nn.functional as F
 import math
 import sys
 
-class HLD(nn.Module):
+class ClassificationHead(nn.Module):
     def __init__(self, *args, **kwargs):
-        super(HLD, self).__init__()
+        super(ClassificationHead, self).__init__()
         input_dim = kwargs.get("input_dim", args[0])
         hidden_dim = args[1]
         num_layers = args[2]
         output_dim = args[3]
+        self.prediction_type = args[4]
+        self.label_learning = args[5]
         p = kwargs.get("dropout", 0.5)
-        self.prediction_type = kwargs.get("prediction_type", "dimensional") 
+        
+        # self.prediction_type = kwargs.get("prediction_type", "dimensional") 
         assert self.prediction_type in ["categorical", "dimensional"]
 
         self.fc=nn.ModuleList([
@@ -39,9 +42,12 @@ class HLD(nn.Module):
         return h
         
     def forward(self, x):
-        h=self.get_repr(x)
+        h = self.get_repr(x)
         result = self.out(h)
-        #if self.prediction_type == "categorical":
-            #print('categorical now!!!')
-            #result = F.softmax(result, dim=1)
+
+        if self.prediction_type == "categorical":
+            if self.label_learning in ["hard-label","soft-label","multi-label"]:
+                pass
+            elif self.label_learning == "distribution-label":
+                result = F.softmax(result, dim=1)
         return result
